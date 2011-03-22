@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"template"
-	"bytes"
 	"http"
 	"compress/gzip"
 	"mime"
@@ -51,15 +50,8 @@ func (se *ServerError)Write(w http.ResponseWriter){
 func Dispatch(w http.ResponseWriter) os.Error {
 	w.SetHeader("Content-Type", "text/html; charset=utf-8")
 	w.SetHeader("Content-Encoding", "gzip")
-	var Templ = template.New(nil)
 
-	err := Templ.Parse(View.Themes.Current().Index)
-	if err != nil {
-		return err
-	}
-
-	bufNozip := bytes.NewBufferString("")
-	err = Templ.Execute(bufNozip, View)
+	templ,err := template.Parse(View.Themes.Current().Index,nil)
 	if err != nil {
 		return err
 	}
@@ -67,11 +59,12 @@ func Dispatch(w http.ResponseWriter) os.Error {
 	if err != nil {
 		return err
 	}
-	gz.Write(bufNozip.Bytes())
-	gz.Close()
+	err = templ.Execute(gz, View)
 	if err != nil {
 		return err
 	}
+	
+	gz.Close()
 	return nil
 }
 

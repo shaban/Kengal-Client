@@ -3,6 +3,7 @@ package main
 import (
 	"mysql"
 	"os"
+	"fmt"
 )
 
 var db *mysql.Client
@@ -31,12 +32,13 @@ type Statement struct {
 
 func InitMysql() os.Error {
 	var err os.Error
-	db, err = mysql.DialUnix(mysql.DEFAULT_SOCKET, app.User, app.Password, app.Database)
+	db, err = mysql.DialTCP("k-dany.de", app.User, app.Password, app.Database)
 	if err != nil {
 		return err
 	}
 	db.LogLevel = uint8(app.LogLevel)
 	db.Query("SET NAMES 'utf8'")
+	fmt.Println("init")
 	return nil
 }
 func prepareMysql() os.Error {
@@ -108,6 +110,7 @@ func prepareMysql() os.Error {
 	if err != nil {
 		return err
 	}
+	fmt.Println("prepare")
 	return nil
 }
 
@@ -243,6 +246,7 @@ func (p *Page) loadBlogData() os.Error {
 			return os.EOF
 		}
 	}
+	fmt.Println("templates")
 	// load nonglobal resources
 	err = statement.Resources.Execute()
 	if err != nil {
@@ -268,6 +272,7 @@ func (p *Page) loadBlogData() os.Error {
 			return os.EOF
 		}
 	}
+	fmt.Println("nonglobalresources")
 
 	// load global resources
 	err = statement.Globals.Execute()
@@ -294,7 +299,8 @@ func (p *Page) loadBlogData() os.Error {
 			return os.EOF
 		}
 	}
-
+	fmt.Println("globalresources")
+	
 	// load Servers
 	err = statement.Servers.Execute()
 	if err != nil {
@@ -320,6 +326,7 @@ func (p *Page) loadBlogData() os.Error {
 			return os.EOF
 		}
 	}
+	fmt.Println("servers")
 
 	err = statement.Blogs.Execute()
 	if err != nil {
@@ -350,6 +357,7 @@ func (p *Page) loadBlogData() os.Error {
 			return os.EOF
 		}
 	}
+	fmt.Println("blogs")
 
 	err = statement.Rubrics.Execute()
 	if err != nil {
@@ -380,6 +388,7 @@ func (p *Page) loadBlogData() os.Error {
 			return os.EOF
 		}
 	}
+	fmt.Println("rubrics")
 
 	err = statement.Articles.Execute()
 	if err != nil {
@@ -411,6 +420,7 @@ func (p *Page) loadBlogData() os.Error {
 			return os.EOF
 		}
 	}
+	fmt.Println("articles")
 	db.Unlock()
 
 	statement.Blogs.FreeResult()
