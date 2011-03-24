@@ -14,7 +14,7 @@ type Serializer interface {
 	New() interface{}
 	Insert(insert interface{}) interface{}
 }
-const DB_ROOT = "/root/db"
+const DB_ROOT = "db"
 
 func saveItem(kind string, item interface{}, key int) os.Error {
 	data, err := json.MarshalIndent(item, "", "\t")
