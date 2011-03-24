@@ -378,58 +378,18 @@ func main() {
 		os.Exit(0)
 	}
 
-	/*err := loadAll()
-	if err != nil {
-		fmt.Println(err.String())
-		os.Exit(1)
-	}*/
-	obj, err := audit("articles")
-	View.Articles= obj.(Articles)
-	if err != nil {
-		fmt.Println(err.String())
-		os.Exit(1)
-	}
-	obj, err = audit("blogs")
-	View.Blogs= obj.(Blogs)
-	if err != nil {
-		fmt.Println(err.String())
-		os.Exit(1)
-	}
-	obj, err = audit("globals")
-	View.Globals= obj.(Globals)
-	if err != nil {
-		fmt.Println(err.String())
-		os.Exit(1)
-	}
-	obj, err = audit("resources")
-	View.Resources= obj.(Resources)
-	if err != nil {
-		fmt.Println(err.String())
-		os.Exit(1)
-	}
-	obj, err = audit("rubrics")
-	View.Rubrics= obj.(Rubrics)
-	if err != nil {
-		fmt.Println(err.String())
-		os.Exit(1)
-	}
-	obj, err = audit("servers")
-	View.Servers= obj.(Servers)
-	if err != nil {
-		fmt.Println(err.String())
-		os.Exit(1)
-	}
-	obj, err = audit("themes")
-	View.Themes= obj.(Themes)
+	err := audit()
 	if err != nil {
 		fmt.Println(err.String())
 		os.Exit(1)
 	}
 	
 	for _,v := range View.Articles{
+		fmt.Println("artikel")
 		saveItem("articles",v,v.ID)
 	}
 	for _,v := range View.Blogs{
+		fmt.Println("blogs")
 		saveItem("blogs",v,v.ID)
 	}
 	for _,v := range View.Globals{

@@ -124,26 +124,39 @@ func ParseParameters(url, host string) os.Error {
 
 func ClientSave(w http.ResponseWriter, r *http.Request) {
 	_, kind := path.Split(r.URL.Path)
-	obj, err := objFromGz(r.Body)
-	if err != nil {
-		w.WriteHeader(500)
-		return
-	}
 	switch kind {
 	case "articles":
-		err = updateArticle(obj.(*Article))
+		obj := new(Article)
+		err := objFromGz(r.Body,obj)
+		if err != nil {
+			w.WriteHeader(500)
+			return
+		}
+		err = updateArticle(obj)
 		if err != nil {
 			w.WriteHeader(500)
 			return
 		}
 	case "blogs":
-		err = updateBlog(obj.(*Blog))
+		obj := new(Blog)
+		err := objFromGz(r.Body,obj)
+		if err != nil {
+			w.WriteHeader(500)
+			return
+		}
+		err = updateBlog(obj)
 		if err != nil {
 			w.WriteHeader(500)
 			return
 		}
 	case "rubrics":
-		err = updateRubric(obj.(*Rubric))
+		obj := new(Rubric)
+		err := objFromGz(r.Body,obj)
+		if err != nil {
+			w.WriteHeader(500)
+			return
+		}
+		err = updateRubric(obj)
 		if err != nil {
 			w.WriteHeader(500)
 			return
@@ -153,26 +166,39 @@ func ClientSave(w http.ResponseWriter, r *http.Request) {
 }
 func ClientNew(w http.ResponseWriter, r *http.Request) {
 	_, kind := path.Split(r.URL.Path)
-	obj, err := objFromGz(r.Body)
-	if err != nil {
-		w.WriteHeader(500)
-		return
-	}
 	switch kind {
 	case "articles":
-		err = insertArticle(obj.(*Article))
+		obj := new(Article)
+		err := objFromGz(r.Body,obj)
+		if err != nil {
+			w.WriteHeader(500)
+			return
+		}
+		err = insertArticle(obj)
 		if err != nil {
 			w.WriteHeader(500)
 			return
 		}
 	case "blogs":
-		err = insertBlog(obj.(*Blog))
+		obj := new(Blog)
+		err := objFromGz(r.Body,obj)
+		if err != nil {
+			w.WriteHeader(500)
+			return
+		}
+		err = insertBlog(obj)
 		if err != nil {
 			w.WriteHeader(500)
 			return
 		}
 	case "rubrics":
-		err = insertRubric(obj.(*Rubric))
+		obj := new(Rubric)
+		err := objFromGz(r.Body,obj)
+		if err != nil {
+			w.WriteHeader(500)
+			return
+		}
+		err = insertRubric(obj)
 		if err != nil {
 			w.WriteHeader(500)
 			return

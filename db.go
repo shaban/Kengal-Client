@@ -116,27 +116,66 @@ func deleteArticle(id int) os.Error {
 	View.Articles = s
 	return nil
 }
-func objFromGz(r io.ReadCloser)(interface{}, os.Error){
+func objFromGz(r io.ReadCloser, obj interface{})(os.Error){
 	defer r.Close()
 	gz, err := gzip.NewReader(r)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	decoder := json.NewDecoder(gz)
-	var obj interface{}
-
 	err = decoder.Decode(&obj)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	gz.Close()
-	return obj, err
+	return nil
 }
-func audit(kind string)(interface{}, os.Error){
-	r, _, err := http.Get(fmt.Sprintf("http://k-dany.de/admin/audit/%s",kind))
+func objFromMaster(url string, scheme interface{})os.Error{
+	r, _, err := http.Get(url)
 	if err!= nil{
-		return nil,err
+		return err
 	}
-	obj, err := objFromGz(r.Body)
-	return obj,err
+	gz, err := gzip.NewReader(r.Body)
+	if err != nil {
+		return err
+	}
+	defer r.Body.Close()
+	decoder := json.NewDecoder(gz)
+	err = decoder.Decode(scheme)
+	if err != nil {
+		return err
+	}
+	gz.Close()
+	return nil
+}
+func audit()(os.Error){
+	err := objFromMaster("http://k-dany.de/admin/audit/articles",&View.Articles)
+	if err != nil {
+		return err
+	}
+	err = objFromMaster("http://k-dany.de/admin/audit/blogs",&View.Blogs)
+	if err != nil {
+		return err
+	}
+	err = objFromMaster("http://k-dany.de/admin/audit/globals",&View.Globals)
+	if err != nil {
+		return err
+	}
+	err = objFromMaster("http://k-dany.de/admin/audit/resources",&View.Resources)
+	if err != nil {
+		return err
+	}
+	err = objFromMaster("http://k-dany.de/admin/audit/servers",&View.Servers)
+	if err != nil {
+		return err
+	}
+	err = objFromMaster("http://k-dany.de/admin/audit/themes",&View.Themes)
+	if err != nil {
+		return err
+	}
+	err = objFromMaster("http://k-dany.de/admin/audit/rubrics",&View.Rubrics)
+	if err != nil {
+		return err
+	}
+	return nil
 }
