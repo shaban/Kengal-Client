@@ -13,6 +13,64 @@ type Rubrics []*Rubric
 type Blogs []*Blog
 type Themes []*Theme
 type Resources []*Resource
+type Globals []*Global
+
+func (a Articles)New()interface{}{
+	art := new(Article)
+	return art
+}
+func (a Articles)Insert(insert interface{})interface{}{
+	a = append(a,insert.(*Article))
+	return a
+}
+func (b Blogs)New()interface{}{
+	blg := new(Blog)
+	return blg
+}
+func (b Blogs)Insert(insert interface{})interface{}{
+	b = append(b,insert.(*Blog))
+	return b
+}
+func (g Globals)New()interface{}{
+	glb := new(Global)
+	return glb
+}
+func (g Globals)Insert(insert interface{})interface{}{
+	g = append(g,insert.(*Global))
+	return g
+}
+func (r Resources)New()interface{}{
+	rsrc := new(Resource)
+	return rsrc
+}
+func (r Resources)Insert(insert interface{})interface{}{
+	r = append(r,insert.(*Resource))
+	return r
+}
+func (r Rubrics)New()interface{}{
+	rb := new(Rubric)
+	return rb
+}
+func (r Rubrics)Insert(insert interface{})interface{}{
+	r = append(r,insert.(*Rubric))
+	return r
+}
+func (s Servers)New()interface{}{
+	srv := new(Server)
+	return srv
+}
+func (s Servers)Insert(insert interface{})interface{}{
+	s= append(s, insert.(*Server))
+	return s
+}
+func (t Themes)New()interface{}{
+	thm := new(Theme)
+	return thm
+}
+func (t Themes)Insert(insert interface{})interface{}{
+	t = append(t,insert.(*Theme))
+	return t
+}
 
 func (s Servers) Current() *Server {
 	for k, v := range s {
@@ -238,15 +296,22 @@ type Article struct {
 }
 
 type Resource struct {
+	ID	int
 	Name     string
 	Template int
 	Data     []byte
 }
 
-type BlogError struct {
+type Global struct {
+	ID	int
+	Name     string
+	Data     []byte
+}
+
+/*type BlogError struct {
 	Code int
 	Msg  string
-}
+}*/
 
 type Page struct {
 	HeadMeta  string
@@ -256,7 +321,7 @@ type Page struct {
 	Blog      int
 	Themes    Themes
 	Resources Resources
-	Globals   Resources
+	Globals   Globals
 	Servers   Servers
 	Index     int
 	Rubric    int
@@ -264,6 +329,7 @@ type Page struct {
 	Server    int
 	Imprint   bool
 	Host      string
+	Master	string
 }
 type Theme struct {
 	ID      int
@@ -272,15 +338,7 @@ type Theme struct {
 	Title   string
 	FromUrl string
 }
-type Application struct {
-	User     string
-	Password string
-	Database string
-	LogLevel int
-	Server   int
-}
 
-var app = new(Application)
 var View = new(Page)
 var PaginatorMax = 5
 
@@ -311,50 +369,90 @@ func (r *Rubric) Path() string {
 }
 
 func main() {
-	flag.StringVar(&app.User, "u", "root", "geben Sie den Mysql User an")
-	flag.StringVar(&app.Password, "p", "password", "setzen Sie das Mysql passwort")
-	flag.StringVar(&app.Database, "db", "mysql", "Geben Sie hier die Datenbank an, die der Server benutzen soll")
-	flag.IntVar(&app.LogLevel, "l", 0, "Bei Werten ungleich 0 gibt der Server Statusmeldungen aus - Zur fehlersuche")
-	flag.IntVar(&app.Server, "s", 0, "Geben Sie hier die ID des Servers an")
+	flag.IntVar(&View.Server, "s", 0, "Geben Sie hier die ID des Servers an")
 
 	flag.Parse()
 
-	if app.Password == "password" || app.Database == "mysql" || app.Server == 0 {
+	if View.Server == 0 {
 		flag.Usage()
 		os.Exit(0)
 	}
-	
-	View.Server=app.Server
-	
-	err := InitMysql()
-	if err != nil {
-		fmt.Println(err.String())
-		os.Exit(1)
-	}
-	
-	err = prepareMysql()
-	if err != nil {
-		fmt.Println(err.String())
-		os.Exit(1)
-	}
 
-	err = View.loadBlogData()
+	/*err := loadAll()
+	if err != nil {
+		fmt.Println(err.String())
+		os.Exit(1)
+	}*/
+	obj, err := audit("articles")
+	View.Articles= obj.(Articles)
 	if err != nil {
 		fmt.Println(err.String())
 		os.Exit(1)
 	}
+	obj, err = audit("blogs")
+	View.Blogs= obj.(Blogs)
+	if err != nil {
+		fmt.Println(err.String())
+		os.Exit(1)
+	}
+	obj, err = audit("globals")
+	View.Globals= obj.(Globals)
+	if err != nil {
+		fmt.Println(err.String())
+		os.Exit(1)
+	}
+	obj, err = audit("resources")
+	View.Resources= obj.(Resources)
+	if err != nil {
+		fmt.Println(err.String())
+		os.Exit(1)
+	}
+	obj, err = audit("rubrics")
+	View.Rubrics= obj.(Rubrics)
+	if err != nil {
+		fmt.Println(err.String())
+		os.Exit(1)
+	}
+	obj, err = audit("servers")
+	View.Servers= obj.(Servers)
+	if err != nil {
+		fmt.Println(err.String())
+		os.Exit(1)
+	}
+	obj, err = audit("themes")
+	View.Themes= obj.(Themes)
+	if err != nil {
+		fmt.Println(err.String())
+		os.Exit(1)
+	}
+	
+	for _,v := range View.Articles{
+		saveItem("articles",v,v.ID)
+	}
+	for _,v := range View.Blogs{
+		saveItem("blogs",v,v.ID)
+	}
+	for _,v := range View.Globals{
+		saveItem("globals",v,v.ID)
+	}
+	for _,v := range View.Resources{
+		saveItem("resources",v,v.ID)
+	}
+	for _,v := range View.Rubrics{
+		saveItem("rubrics",v,v.ID)
+	}
+	for _,v := range View.Servers{
+		saveItem("servers",v,v.ID)
+	}
+	for _,v := range View.Themes{
+		saveItem("themes",v,v.ID)
+	}
+	
 	http.HandleFunc("/", Controller)
 
-	http.HandleFunc("/admin/blog/save", BlogSave)
-	http.HandleFunc("/admin/rubric/save", RubricSave)
-	http.HandleFunc("/admin/article/save", ArticleSave)
-	
-	http.HandleFunc("/admin/blog/new", BlogNew)
-	http.HandleFunc("/admin/rubric/new", RubricNew)
-	http.HandleFunc("/admin/article/new", ArticleNew)
-	
-	http.HandleFunc("/admin/rubric/delete/", RubricDelete)
-	http.HandleFunc("/admin/article/delete/", ArticleDelete)
+	http.HandleFunc("/admin/save/", ClientSave)
+	http.HandleFunc("/admin/new/", ClientNew)
+	http.HandleFunc("/admin/delete/", ClientDelete)
 
 	http.HandleFunc("/global/", GlobalController)
 	http.HandleFunc("/images/", Images)

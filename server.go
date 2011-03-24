@@ -9,8 +9,8 @@ import (
 	"path"
 	"os"
 	"strconv"
-	"time"
 )
+
 const errHtml = `
 	<html>
 		<head>
@@ -37,13 +37,14 @@ const errHtml = `
 		</body>
 	</html>`
 
-type ServerError struct{
-	Code int 
-	Msg string
+type ServerError struct {
+	Code int
+	Msg  string
 }
-func (se *ServerError)Write(w http.ResponseWriter){
+
+func (se *ServerError) Write(w http.ResponseWriter) {
 	w.WriteHeader(se.Code)
-	errOut := fmt.Sprintf(errHtml,se.Code,se.Msg)
+	errOut := fmt.Sprintf(errHtml, se.Code, se.Msg)
 	w.Write([]byte(errOut))
 	w.Flush()
 }
@@ -51,7 +52,7 @@ func Dispatch(w http.ResponseWriter) os.Error {
 	w.SetHeader("Content-Type", "text/html; charset=utf-8")
 	w.SetHeader("Content-Encoding", "gzip")
 
-	templ,err := template.Parse(View.Themes.Current().Index,nil)
+	templ, err := template.Parse(View.Themes.Current().Index, nil)
 	if err != nil {
 		return err
 	}
@@ -63,7 +64,7 @@ func Dispatch(w http.ResponseWriter) os.Error {
 	if err != nil {
 		return err
 	}
-	
+
 	gz.Close()
 	return nil
 }
@@ -120,157 +121,83 @@ func ParseParameters(url, host string) os.Error {
 	}
 	return os.ENOTDIR
 }
-func BlogSave(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	b := new(Blog)
-	f := r.Form
 
-	b.Title = f["Title"][0]
-	b.Slogan = f["Slogan"][0]
-	b.Keywords = f["Keywords"][0]
-	b.Description = f["Description"][0]
-	b.Template, _ = strconv.Atoi(f["Template"][0])
-	b.ID, _ = strconv.Atoi(f["ID"][0])
-	b.Server, _ = strconv.Atoi(f["Server"][0])
-	b.Url = f["Url"][0]
-
-	err := updateBlog(b)
+func ClientSave(w http.ResponseWriter, r *http.Request) {
+	_, kind := path.Split(r.URL.Path)
+	obj, err := objFromGz(r.Body)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(500)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	switch kind {
+	case "articles":
+		err = updateArticle(obj.(*Article))
+		if err != nil {
+			w.WriteHeader(500)
+			return
+		}
+	case "blogs":
+		err = updateBlog(obj.(*Blog))
+		if err != nil {
+			w.WriteHeader(500)
+			return
+		}
+	case "rubrics":
+		err = updateRubric(obj.(*Rubric))
+		if err != nil {
+			w.WriteHeader(500)
+			return
+		}
+	}
+	w.WriteHeader(200)
 }
-
-func RubricSave(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	rb := new(Rubric)
-	f := r.Form
-	fmt.Println(f)
-	rb.Title = f["Title"][0]
-	rb.Keywords = f["Keywords"][0]
-	rb.Description = f["Description"][0]
-	rb.Blog, _ = strconv.Atoi(f["Blog"][0])
-	rb.ID, _ = strconv.Atoi(f["ID"][0])
-	rb.Url = f["Url"][0]
-
-	err := updateRubric(rb)
+func ClientNew(w http.ResponseWriter, r *http.Request) {
+	_, kind := path.Split(r.URL.Path)
+	obj, err := objFromGz(r.Body)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(500)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	switch kind {
+	case "articles":
+		err = insertArticle(obj.(*Article))
+		if err != nil {
+			w.WriteHeader(500)
+			return
+		}
+	case "blogs":
+		err = insertBlog(obj.(*Blog))
+		if err != nil {
+			w.WriteHeader(500)
+			return
+		}
+	case "rubrics":
+		err = insertRubric(obj.(*Rubric))
+		if err != nil {
+			w.WriteHeader(500)
+			return
+		}
+	}
+	w.WriteHeader(200)
 }
+func ClientDelete(w http.ResponseWriter, r *http.Request) {
+	_, kind := path.Split(r.URL.Path)
+	id, err := strconv.Atoi(r.FormValue("ID"))
 
-func ArticleSave(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	a := new(Article)
-	f := r.Form
-	fmt.Println(f["Blog"][0])
-	a.Title = f["Title"][0]
-	a.Keywords = f["Keywords"][0]
-	a.Description = f["Description"][0]
-	a.Rubric, _ = strconv.Atoi(f["Rubric"][0])
-	a.ID, _ = strconv.Atoi(f["ID"][0])
-	a.Url = f["Url"][0]
-	a.Blog, _ = strconv.Atoi(f["Blog"][0])
-	a.Date = f["Date"][0]
-	a.Teaser = f["Teaser"][0]
-	a.Text = f["Text"][0]
-
-	err := updateArticle(a)
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		return
+	switch kind {
+	case "articles":
+		err = deleteArticle(id)
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+	case "rubrics":
+		err = deleteRubric(id)
+		if err != nil {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
 	}
-
-	w.WriteHeader(http.StatusOK)
-}
-
-func BlogNew(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	b := new(Blog)
-	f := r.Form
-
-	b.Title = f["Title"][0]
-	b.Slogan = f["Slogan"][0]
-	b.Keywords = f["Keywords"][0]
-	b.Description = f["Description"][0]
-	b.Template, _ = strconv.Atoi(f["Template"][0])
-	b.Server, _ = strconv.Atoi(f["Server"][0])
-	b.Url = f["Url"][0]
-
-	err := insertBlog(b)
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-}
-
-func RubricNew(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	rb := new(Rubric)
-	f := r.Form
-
-	rb.Title = f["Title"][0]
-	rb.Keywords = f["Keywords"][0]
-	rb.Description = f["Description"][0]
-	rb.Blog, _ = strconv.Atoi(f["Blog"][0])
-	rb.Url = f["Url"][0]
-
-	err := insertRubric(rb)
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-}
-
-func ArticleNew(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	a := new(Article)
-	f := r.Form
-	fmt.Println(f)
-
-	a.Title = f["Title"][0]
-	a.Keywords = f["Keywords"][0]
-	a.Description = f["Description"][0]
-	a.Blog, _ = strconv.Atoi(f["Blog"][0])
-	a.Url = f["Url"][0]
-	a.Rubric, _ = strconv.Atoi(f["Rubric"][0])
-	a.Teaser = "<p>Geben Sie hier Ihren Teasertext ein</p>"
-	a.Text = "<p>Geben Sie hier den Text des Artikels ein</p>"
-	a.Date = time.LocalTime().Format("02.01.2006 15:04:05")
-
-	err := insertArticle(a)
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-}
-func ArticleDelete(w http.ResponseWriter, r *http.Request) {
-	id, _ := strconv.Atoi(r.FormValue("ID"))
-	err := deleteArticle(id)
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-}
-func RubricDelete(w http.ResponseWriter, r *http.Request) {
-	id, _ := strconv.Atoi(r.FormValue("ID"))
-	err := deleteRubric(id)
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -337,14 +264,14 @@ func GlobalController(w http.ResponseWriter, r *http.Request) {
 	imagePath := path.Base(r.URL.Path)
 	mimeType := mime.TypeByExtension(path.Ext(imagePath))
 	w.SetHeader("Content-Type", mimeType)
-	data:= make([]byte,0)
+	data := make([]byte, 0)
 	for _, v := range View.Globals {
 		if v.Name == imagePath {
-			data=v.Data
+			data = v.Data
 		}
 	}
 	kind, _ := path.Split(mimeType)
-	if kind=="image/"{
+	if kind == "image/" {
 		w.Write(data)
 		return
 	}
