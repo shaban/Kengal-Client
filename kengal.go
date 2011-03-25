@@ -368,8 +368,26 @@ func (r *Rubric) Path() string {
 	return fmt.Sprintf("/kategorie/%v/%s", r.ID, r.Url)
 }
 
+/*func (a *Article)getBlog() *Blog{
+	for k, v := range View.Blogs{
+		if v.ID == a.Blog{
+			return View.Blogs[k]
+		}
+	}
+	return nil
+}
+func (r *Rubric)getBlog() *Blog{
+	for k, v := range View.Blogs{
+		if v.ID == r.Blog{
+			return View.Blogs[k]
+		}
+	}
+	return nil
+}*/
+
 func main() {
 	flag.IntVar(&View.Server, "s", 0, "Geben Sie hier die ID des Servers an")
+	flag.StringVar(&View.Master, "m", "", "Geben Sie hier die Adresse des MasterServers an")
 
 	flag.Parse()
 
@@ -385,11 +403,9 @@ func main() {
 	}
 	
 	for _,v := range View.Articles{
-		fmt.Println("artikel")
 		saveItem("articles",v,v.ID)
 	}
 	for _,v := range View.Blogs{
-		fmt.Println("blogs")
 		saveItem("blogs",v,v.ID)
 	}
 	for _,v := range View.Globals{
@@ -419,6 +435,9 @@ func main() {
 	http.HandleFunc("/style.css", Css)
 	http.HandleFunc("/favicon.ico", GlobalController)
 	
-	http.ListenAndServe(":80", nil)
-	os.Exit(0)
+	err = http.ListenAndServe(":8080", nil)
+	if err != nil {
+		fmt.Println(err.String())
+		os.Exit(1)
+	}
 }

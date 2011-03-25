@@ -127,7 +127,7 @@ func ClientSave(w http.ResponseWriter, r *http.Request) {
 	switch kind {
 	case "articles":
 		obj := new(Article)
-		err := objFromGz(r.Body,obj)
+		err := objFromStream(r,obj)
 		if err != nil {
 			w.WriteHeader(500)
 			return
@@ -139,7 +139,7 @@ func ClientSave(w http.ResponseWriter, r *http.Request) {
 		}
 	case "blogs":
 		obj := new(Blog)
-		err := objFromGz(r.Body,obj)
+		err := objFromStream(r,obj)
 		if err != nil {
 			w.WriteHeader(500)
 			return
@@ -151,7 +151,7 @@ func ClientSave(w http.ResponseWriter, r *http.Request) {
 		}
 	case "rubrics":
 		obj := new(Rubric)
-		err := objFromGz(r.Body,obj)
+		err := objFromStream(r,obj)
 		if err != nil {
 			w.WriteHeader(500)
 			return
@@ -169,7 +169,7 @@ func ClientNew(w http.ResponseWriter, r *http.Request) {
 	switch kind {
 	case "articles":
 		obj := new(Article)
-		err := objFromGz(r.Body,obj)
+		err := objFromStream(r,obj)
 		if err != nil {
 			w.WriteHeader(500)
 			return
@@ -181,7 +181,7 @@ func ClientNew(w http.ResponseWriter, r *http.Request) {
 		}
 	case "blogs":
 		obj := new(Blog)
-		err := objFromGz(r.Body,obj)
+		err := objFromStream(r,obj)
 		if err != nil {
 			w.WriteHeader(500)
 			return
@@ -193,7 +193,7 @@ func ClientNew(w http.ResponseWriter, r *http.Request) {
 		}
 	case "rubrics":
 		obj := new(Rubric)
-		err := objFromGz(r.Body,obj)
+		err := objFromStream(r,obj)
 		if err != nil {
 			w.WriteHeader(500)
 			return
