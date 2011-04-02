@@ -5,87 +5,24 @@ import (
 	"os"
 	"flag"
 	"http"
+	gobzip "github.com/shaban/kengal/gobzip"
 )
 
-type Servers []*Server
-type Articles []*Article
-type Rubrics []*Rubric
-type Blogs []*Blog
-type Themes []*Theme
-type Resources []*Resource
-type Globals []*Global
-
-func (a Articles)New()interface{}{
-	art := new(Article)
-	return art
-}
-func (a Articles)Insert(insert interface{})interface{}{
-	a = append(a,insert.(*Article))
-	return a
-}
-func (b Blogs)New()interface{}{
-	blg := new(Blog)
-	return blg
-}
-func (b Blogs)Insert(insert interface{})interface{}{
-	b = append(b,insert.(*Blog))
-	return b
-}
-func (g Globals)New()interface{}{
-	glb := new(Global)
-	return glb
-}
-func (g Globals)Insert(insert interface{})interface{}{
-	g = append(g,insert.(*Global))
-	return g
-}
-func (r Resources)New()interface{}{
-	rsrc := new(Resource)
-	return rsrc
-}
-func (r Resources)Insert(insert interface{})interface{}{
-	r = append(r,insert.(*Resource))
-	return r
-}
-func (r Rubrics)New()interface{}{
-	rb := new(Rubric)
-	return rb
-}
-func (r Rubrics)Insert(insert interface{})interface{}{
-	r = append(r,insert.(*Rubric))
-	return r
-}
-func (s Servers)New()interface{}{
-	srv := new(Server)
-	return srv
-}
-func (s Servers)Insert(insert interface{})interface{}{
-	s= append(s, insert.(*Server))
-	return s
-}
-func (t Themes)New()interface{}{
-	thm := new(Theme)
-	return thm
-}
-func (t Themes)Insert(insert interface{})interface{}{
-	t = append(t,insert.(*Theme))
-	return t
-}
-
-func (s Servers) Current() *Server {
-	for k, v := range s {
-		if v.ID == View.Server {
-			return s[k]
+func (a *Article)getBlog() *Blog{
+	for k, v := range View.Blogs{
+		if v.ID == a.Blog{
+			return View.Blogs[k]
 		}
 	}
 	return nil
 }
-
-func (srv *Server) Active() bool {
-	if View.Server == 0 || srv.ID != View.Server{
-		return false
+func (r *Rubric)getBlog() *Blog{
+	for k, v := range View.Blogs{
+		if v.ID == r.Blog{
+			return View.Blogs[k]
+		}
 	}
-	return true
+	return nil
 }
 
 func (t *Theme) Active() bool {
@@ -107,34 +44,6 @@ func (r *Rubric) Active() bool {
 		return true
 	}
 	return false
-}
-func (b Blogs) Replace(blg *Blog)bool{
-	for k, v := range b{
-		if v.ID == blg.ID{
-			b[k] = blg
-			return false
-		}
-	}
-	return true
-}
-func (r Rubrics) Replace(rb *Rubric)bool{
-	for k, v := range r{
-		if v.ID == rb.ID{
-			r[k] = rb
-			return false
-		}
-	}
-	return true
-}
-
-func (a Articles) Replace(art *Article)bool{
-	for k, v := range a{
-		if v.ID == art.ID{
-			a[k] = art
-			return false
-		}
-	}
-	return true
 }
 
 func (b Blogs) Current() *Blog {
@@ -254,93 +163,9 @@ func (r Rubrics) Index() Rubrics {
 	return s
 }
 
-type Server struct {
-	ID     int
-	IP     string
-	Vendor string
-	Type   string
-	Item   int
-}
-
-type Blog struct {
-	ID          int
-	Title       string
-	Url         string
-	Template    int
-	Keywords    string
-	Description string
-	Slogan      string
-	Server      int
-}
-
-type Rubric struct {
-	ID          int
-	Title       string
-	Url    string
-	Keywords    string
-	Description string
-	Blog        int
-}
-
-type Article struct {
-	ID          int
-	Date       	string
-	Title       string
-	Keywords    string
-	Description string
-	Text        string
-	Teaser      string
-	Blog        int
-	Rubric      int
-	Url         string
-}
-
-type Resource struct {
-	ID	int
-	Name     string
-	Template int
-	Data     []byte
-}
-
-type Global struct {
-	ID	int
-	Name     string
-	Data     []byte
-}
-
-/*type BlogError struct {
-	Code int
-	Msg  string
-}*/
-
-type Page struct {
-	HeadMeta  string
-	Rubrics   Rubrics
-	Articles  Articles
-	Blogs     Blogs
-	Blog      int
-	Themes    Themes
-	Resources Resources
-	Globals   Globals
-	Servers   Servers
-	Index     int
-	Rubric    int
-	Article   int
-	Server    int
-	Imprint   bool
-	Host      string
-	Master	string
-}
-type Theme struct {
-	ID      int
-	Index   string
-	Style   string
-	Title   string
-	FromUrl string
-}
-
 var View = new(Page)
 var PaginatorMax = 5
+var client = gobzip.DefaultClient
 
 func (a *Article) DateTime() string {
 	return a.Date
@@ -368,74 +193,86 @@ func (r *Rubric) Path() string {
 	return fmt.Sprintf("/kategorie/%v/%s", r.ID, r.Url)
 }
 
-/*func (a *Article)getBlog() *Blog{
-	for k, v := range View.Blogs{
-		if v.ID == a.Blog{
-			return View.Blogs[k]
-		}
-	}
-	return nil
-}
-func (r *Rubric)getBlog() *Blog{
-	for k, v := range View.Blogs{
-		if v.ID == r.Blog{
-			return View.Blogs[k]
-		}
-	}
-	return nil
-}*/
-
 func main() {
-	flag.IntVar(&View.Server, "s", 0, "Geben Sie hier die ID des Servers an")
+	flag.StringVar(&View.Server, "s", "", "Geben Sie hier die IP des Servers an")
 	flag.StringVar(&View.Master, "m", "", "Geben Sie hier die Adresse des MasterServers an")
 
 	flag.Parse()
 
-	if View.Server == 0 {
+	if View.Server == "" {
 		flag.Usage()
 		os.Exit(0)
 	}
-
-	err := audit()
-	if err != nil {
-		fmt.Println(err.String())
+	var err os.Error
+	client := gobzip.DefaultClient
+	client.Init(View, "db", "/admin/delete/", "/admin/replace/", "/admin/insert/", "/admin/audit/")
+	client.Audit(View.Master,View.Server,&View.Articles)
+	client.Audit(View.Master,View.Server,&View.Blogs)
+	client.Audit(View.Master,View.Server,&View.Rubrics)
+	client.Audit(View.Master,View.Server,&View.Globals)
+	client.Audit(View.Master,View.Server,&View.Resources)
+	client.Audit(View.Master,View.Server,&View.Themes)
+	
+	
+	for _, v := range View.Articles {
+		fmt.Printf("Art\tk: %v v:%s\n", v.ID, v.Title)
+	}
+	for _, v := range View.Blogs {
+		fmt.Printf("Blg\tk: %v v:%s\n", v.ID, v.Title)
+	}
+	for _, v := range View.Globals {
+		fmt.Printf("Glb\tk: %v v:%s\n", v.ID, v.Name)
+	}
+	for _, v := range View.Resources {
+		fmt.Printf("Rsr\tk: %v v:%s\n", v.ID, v.Name)
+	}
+	for _, v := range View.Rubrics {
+		fmt.Printf("Rbr\tk: %v v:%s\n", v.ID, v.Title)
+	}
+	for _, v := range View.Themes {
+		fmt.Printf("Thm\tk: %v v:%s\n", v.ID, v.Title)
+	}
+	
+	err = client.SaveKind(View.Articles)
+	if err!= nil{
+		fmt.Println(err)
 		os.Exit(1)
 	}
-	
-	for _,v := range View.Articles{
-		saveItem("articles",v,v.ID)
+	err = client.SaveKind(View.Blogs)
+	if err!= nil{
+		fmt.Println(err)
+		os.Exit(1)
 	}
-	for _,v := range View.Blogs{
-		saveItem("blogs",v,v.ID)
+	err = client.SaveKind(View.Globals)
+	if err!= nil{
+		fmt.Println(err)
+		os.Exit(1)
 	}
-	for _,v := range View.Globals{
-		saveItem("globals",v,v.ID)
+	err = client.SaveKind(View.Rubrics)
+	if err!= nil{
+		fmt.Println(err)
+		os.Exit(1)
 	}
-	for _,v := range View.Resources{
-		saveItem("resources",v,v.ID)
+	err = client.SaveKind(View.Resources)
+	if err!= nil{
+		fmt.Println(err)
+		os.Exit(1)
 	}
-	for _,v := range View.Rubrics{
-		saveItem("rubrics",v,v.ID)
+	err = client.SaveKind(View.Themes)
+	if err!= nil{
+		fmt.Println(err)
+		os.Exit(1)
 	}
-	for _,v := range View.Servers{
-		saveItem("servers",v,v.ID)
-	}
-	for _,v := range View.Themes{
-		saveItem("themes",v,v.ID)
-	}
+	client.HandleEvents()
 	
 	http.HandleFunc("/", Controller)
-
-	http.HandleFunc("/admin/save/", ClientSave)
-	http.HandleFunc("/admin/new/", ClientNew)
-	http.HandleFunc("/admin/delete/", ClientDelete)
 
 	http.HandleFunc("/global/", GlobalController)
 	http.HandleFunc("/images/", Images)
 	http.HandleFunc("/style.css", Css)
 	http.HandleFunc("/favicon.ico", GlobalController)
 	
-	err = http.ListenAndServe(":8080", nil)
+	err = http.ListenAndServe(":80", nil)
 	if err != nil {
 		fmt.Println(err.String())
 		os.Exit(1)

@@ -75,7 +75,10 @@ func ParseParameters(url, host string) os.Error {
 	View.Index = 0
 	View.Rubric = 0
 	View.Article = 0
-
+	
+	fmt.Println(url)
+	fmt.Println(host)
+	
 	dir, file := path.Split(url)
 	if file == "" {
 		// is Index Startpage
@@ -122,121 +125,18 @@ func ParseParameters(url, host string) os.Error {
 	return os.ENOTDIR
 }
 
-func ClientSave(w http.ResponseWriter, r *http.Request) {
-	_, kind := path.Split(r.URL.Path)
-	switch kind {
-	case "articles":
-		obj := new(Article)
-		err := objFromStream(r,obj)
-		if err != nil {
-			w.WriteHeader(500)
-			return
-		}
-		err = updateArticle(obj)
-		if err != nil {
-			w.WriteHeader(500)
-			return
-		}
-	case "blogs":
-		obj := new(Blog)
-		err := objFromStream(r,obj)
-		if err != nil {
-			w.WriteHeader(500)
-			return
-		}
-		err = updateBlog(obj)
-		if err != nil {
-			w.WriteHeader(500)
-			return
-		}
-	case "rubrics":
-		obj := new(Rubric)
-		err := objFromStream(r,obj)
-		if err != nil {
-			w.WriteHeader(500)
-			return
-		}
-		err = updateRubric(obj)
-		if err != nil {
-			w.WriteHeader(500)
-			return
-		}
-	}
-	w.WriteHeader(200)
-}
-func ClientNew(w http.ResponseWriter, r *http.Request) {
-	_, kind := path.Split(r.URL.Path)
-	switch kind {
-	case "articles":
-		obj := new(Article)
-		err := objFromStream(r,obj)
-		if err != nil {
-			w.WriteHeader(500)
-			return
-		}
-		err = insertArticle(obj)
-		if err != nil {
-			w.WriteHeader(500)
-			return
-		}
-	case "blogs":
-		obj := new(Blog)
-		err := objFromStream(r,obj)
-		if err != nil {
-			w.WriteHeader(500)
-			return
-		}
-		err = insertBlog(obj)
-		if err != nil {
-			w.WriteHeader(500)
-			return
-		}
-	case "rubrics":
-		obj := new(Rubric)
-		err := objFromStream(r,obj)
-		if err != nil {
-			w.WriteHeader(500)
-			return
-		}
-		err = insertRubric(obj)
-		if err != nil {
-			w.WriteHeader(500)
-			return
-		}
-	}
-	w.WriteHeader(200)
-}
-func ClientDelete(w http.ResponseWriter, r *http.Request) {
-	_, kind := path.Split(r.URL.Path)
-	id, err := strconv.Atoi(r.FormValue("ID"))
-
-	switch kind {
-	case "articles":
-		err = deleteArticle(id)
-		if err != nil {
-			w.WriteHeader(http.StatusNotFound)
-			return
-		}
-	case "rubrics":
-		err = deleteRubric(id)
-		if err != nil {
-			w.WriteHeader(http.StatusNotFound)
-			return
-		}
-	}
-	w.WriteHeader(http.StatusOK)
-}
-
 func Controller(w http.ResponseWriter, r *http.Request) {
 	ParseParameters(r.URL.Path, r.Host)
 
 	w.SetHeader("Content-Type", "text/html; charset=utf-8")
+	
 
 	if View.Blogs.Current() == nil {
 		se := &ServerError{403, "Forbidden"}
 		se.Write(w)
 		return
 	}
+	fmt.Println(View.Index)
 
 	if View.Index != 0 {
 		w.SetHeader("Content-Encoding", "gzip")
@@ -247,7 +147,7 @@ func Controller(w http.ResponseWriter, r *http.Request) {
 	}
 	if View.Article != 0 {
 		w.SetHeader("Content-Encoding", "gzip")
-		View.HeadMeta = fmt.Sprintf(`<meta name="description\" content=\"%s\" />`, View.Articles.Current().Description)
+		View.HeadMeta = fmt.Sprintf(`<meta name="description" content="%s" />`, View.Articles.Current().Description)
 		View.HeadMeta += fmt.Sprintf(`<meta name="keywords" content="%s" />`, View.Articles.Current().Keywords)
 		Dispatch(w)
 		return
