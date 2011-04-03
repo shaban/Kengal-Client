@@ -76,9 +76,6 @@ func ParseParameters(url, host string) os.Error {
 	View.Rubric = 0
 	View.Article = 0
 	
-	fmt.Println(url)
-	fmt.Println(host)
-	
 	dir, file := path.Split(url)
 	if file == "" {
 		// is Index Startpage
@@ -136,7 +133,6 @@ func Controller(w http.ResponseWriter, r *http.Request) {
 		se.Write(w)
 		return
 	}
-	fmt.Println(View.Index)
 
 	if View.Index != 0 {
 		w.SetHeader("Content-Encoding", "gzip")

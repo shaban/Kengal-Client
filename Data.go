@@ -3,9 +3,6 @@ package main
 import (
 	"os"
 	gobzip "github.com/shaban/kengal/gobzip"
-	"strconv"
-	"time"
-	"fmt"
 )
 
 type Articles []*Article
@@ -32,25 +29,6 @@ func (s *Rubric) Key() int {
 }
 func (s *Theme) Key() int {
 	return s.ID
-}
-func (s *Article) Log() string {
-	return fmt.Sprintf("Typ: Article, ID: %v, Title: %s, Url: %s", s.ID, s.Title, s.Url)
-}
-func (s *Blog) Log() string {
-	return fmt.Sprintf("Typ: Blog, ID: %v, Title: %s, Url: %s", s.ID, s.Title, s.Url)
-}
-func (s *Global) Log() string {
-	return fmt.Sprintf("Typ: Global, ID: %v, Name: %s", s.ID, s.Name)
-}
-func (s *Resource) Log() string {
-	return fmt.Sprintf("Typ: Resource, ID: %v, Name: %s", s.ID, s.Name)
-}
-func (s *Rubric) Log() string {
-	return fmt.Sprintf("Typ: Rubric, ID: %v, Title: %s, Url: %s", s.ID, s.Title, s.Url)
-}
-
-func (s *Theme) Log() string {
-	return fmt.Sprintf("Typ: Theme, ID: %v, Title: %s, FromUrl: %s", s.ID, s.Title, s.FromUrl)
 }
 func (s *Article) Kind() string {
 	return "articles"
@@ -377,67 +355,6 @@ func (ser Themes) Keys()[]int{
 	return keys
 }
 
-func (ser Articles) NewFromForm(from map[string][]string) gobzip.Serial {
-	a := new(Article)
-	key :=View.KeyFromForm(from)
-	if key == 0 {
-		a.ID = ser.NewKey()
-	} else {
-		a.ID = key
-	}
-	a.Blog, _ = strconv.Atoi(from["Blog"][0])
-	a.Date = time.LocalTime().Format("02.01.2006 15:04:05")
-	a.Description = from["Description"][0]
-	a.Keywords = from["Keywords"][0]
-	a.Rubric, _ = strconv.Atoi(from["Rubric"][0])
-	a.Teaser = from["Teaser"][0]
-	a.Text = from["Text"][0]
-	a.Title = from["Title"][0]
-	a.Url = from["Url"][0]
-	return a
-}
-func (ser Blogs) NewFromForm(from map[string][]string) gobzip.Serial {
-	a := new(Blog)
-	key :=View.KeyFromForm(from)
-	if key == 0 {
-		a.ID = ser.NewKey()
-	} else {
-		a.ID = key
-	}
-	a.Description = from["Description"][0]
-	a.Keywords = from["Keywords"][0]
-	a.Server, _ = strconv.Atoi(from["Server"][0])
-	a.Slogan = from["Slogan"][0]
-	a.Template, _ = strconv.Atoi(from["Template"][0])
-	a.Title = from["Title"][0]
-	a.Url = from["Url"][0]
-	return a
-}
-func (ser Rubrics) NewFromForm(from map[string][]string) gobzip.Serial {
-	a := new(Rubric)
-	key :=View.KeyFromForm(from)
-	if key == 0 {
-		a.ID = ser.NewKey()
-	} else {
-		a.ID = key
-	}
-	a.Blog, _ = strconv.Atoi(from["Blog"][0])
-	a.Description = from["Description"][0]
-	a.Keywords = from["Keywords"][0]
-	a.Title = from["Title"][0]
-	a.Url = from["Url"][0]
-	return a
-}
-func (ser Globals) NewFromForm(from map[string][]string) gobzip.Serial {
-	return nil
-}
-func (ser Resources) NewFromForm(from map[string][]string) gobzip.Serial {
-	return nil
-}
-func (ser Themes) NewFromForm(from map[string][]string) gobzip.Serial {
-	return nil
-}
-
 func (p *Page) Delegate(kind string) gobzip.Serializer {
 	switch kind {
 	case "articles":
@@ -455,25 +372,6 @@ func (p *Page) Delegate(kind string) gobzip.Serializer {
 	}
 	return nil
 }
-func (p *Page) KeyFromForm(from map[string][]string) int {
-	if from["ID"] !=nil{
-		key, err := strconv.Atoi(from["ID"][0])
-		if err != nil {
-			return 0
-		}
-		return key
-	}
-	return 0
-}
-
-/*type Server struct {
-	ID     int
-	IP     string
-	Vendor string
-	Cpu    string
-	Cache  string
-	Memory string
-}*/
 
 type Blog struct {
 	ID          int
@@ -530,7 +428,6 @@ type Page struct {
 	Themes    Themes
 	Resources Resources
 	Globals   Globals
-	//Servers   Servers
 	Index     int
 	Rubric    int
 	Article   int
@@ -545,36 +442,4 @@ type Theme struct {
 	Style   string
 	Title   string
 	FromUrl string
-}
-
-func LoadAll() os.Error {
-	/*err := master.LoadKind(&View.Articles)
-	if err != nil {
-		return err
-	}
-	err = master.LoadKind(&View.Blogs)
-	if err != nil {
-		return err
-	}
-	err = master.LoadKind(&View.Globals)
-	if err != nil {
-		return err
-	}
-	err = master.LoadKind(&View.Resources)
-	if err != nil {
-		return err
-	}
-	err = master.LoadKind(&View.Rubrics)
-	if err != nil {
-		return err
-	}
-	err = master.LoadKind(&View.Servers)
-	if err != nil {
-		return err
-	}
-	err = master.LoadKind(&View.Themes)
-	if err != nil {
-		return err
-	}*/
-	return nil
 }

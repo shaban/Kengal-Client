@@ -213,26 +213,6 @@ func main() {
 	client.Audit(View.Master,View.Server,&View.Resources)
 	client.Audit(View.Master,View.Server,&View.Themes)
 	
-	
-	for _, v := range View.Articles {
-		fmt.Printf("Art\tk: %v v:%s\n", v.ID, v.Title)
-	}
-	for _, v := range View.Blogs {
-		fmt.Printf("Blg\tk: %v v:%s\n", v.ID, v.Title)
-	}
-	for _, v := range View.Globals {
-		fmt.Printf("Glb\tk: %v v:%s\n", v.ID, v.Name)
-	}
-	for _, v := range View.Resources {
-		fmt.Printf("Rsr\tk: %v v:%s\n", v.ID, v.Name)
-	}
-	for _, v := range View.Rubrics {
-		fmt.Printf("Rbr\tk: %v v:%s\n", v.ID, v.Title)
-	}
-	for _, v := range View.Themes {
-		fmt.Printf("Thm\tk: %v v:%s\n", v.ID, v.Title)
-	}
-	
 	err = client.SaveKind(View.Articles)
 	if err!= nil{
 		fmt.Println(err)
