@@ -57,6 +57,9 @@ func (b Blogs) Current() *Blog {
 
 func (t Themes) Current() *Theme {
 	current := View.Blogs.Current()
+	if current == nil{
+		return nil
+	}
 	for k, v := range t {
 		if v.ID == current.Template {
 			return t[k]
