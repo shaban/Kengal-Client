@@ -9,6 +9,7 @@ import (
 	"path"
 	"os"
 	"strconv"
+	"sort"
 )
 
 const errHtml = `
@@ -124,7 +125,9 @@ func ParseParameters(url, host string) os.Error {
 
 func Controller(w http.ResponseWriter, r *http.Request) {
 	ParseParameters(r.URL.Path, r.Host)
-
+	if ! sort.IsSorted(View.Articles){
+		sort.Sort(View.Articles)
+	}
 	w.SetHeader("Content-Type", "text/html; charset=utf-8")
 	
 

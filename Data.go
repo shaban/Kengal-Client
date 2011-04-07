@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	gobzip "github.com/shaban/kengal/gobzip"
+	"time"
 )
 
 type Articles []*Article
@@ -12,6 +13,20 @@ type Themes []*Theme
 type Resources []*Resource
 type Globals []*Global
 
+func (ser Articles)Len()int{
+	return len(ser)
+}
+func (ser Articles)Less(i, j int) bool{
+	it,_ := time.Parse("02.01.2006 15:04:05",ser[i].Date)
+	jt,_ := time.Parse("02.01.2006 15:04:05",ser[j].Date)
+	return jt.Seconds() < it.Seconds()
+}
+func (ser Articles)Swap(i, j int){
+	cycle := make([]*Article,1)
+	copy(cycle,ser[i:i+1])
+	ser[i] = ser[j]
+	ser[j]=cycle[0]
+}
 func (s *Article) Key() int {
 	return s.ID
 }
@@ -66,6 +81,7 @@ func (ser Rubrics) Kind() string {
 func (ser Themes) Kind() string {
 	return "themes"
 }
+
 func (ser Articles) New() gobzip.Serial {
 	return new(Article)
 }
