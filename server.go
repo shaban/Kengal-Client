@@ -50,10 +50,16 @@ func (se *ServerError) Write(w http.ResponseWriter) {
 	w.Flush()
 }
 func Dispatch(w http.ResponseWriter) os.Error {
+	t := View.Themes.Current()
+	if t==nil{
+		se := &ServerError{404, "Not Found"}
+		se.Write(w)
+		return os.ENOENT
+	}
 	w.SetHeader("Content-Type", "text/html; charset=utf-8")
 	w.SetHeader("Content-Encoding", "gzip")
 
-	templ, err := template.Parse(View.Themes.Current().Index, nil)
+	templ, err := template.Parse(t.Index, nil)
 	if err != nil {
 		return err
 	}
@@ -216,10 +222,20 @@ func GlobalController(w http.ResponseWriter, r *http.Request) {
 	gz.Close()
 }
 func Css(w http.ResponseWriter, r *http.Request) {
+	t := View.Themes.Current()
+	if t == nil{
+		se := &ServerError{404, "Not Found"}
+		se.Write(w)
+		return
+	}
+	gz, err := gzip.NewWriter(w)
+	if err != nil{
+		se := &ServerError{500, "Internal Error"}
+		se.Write(w)
+		return
+	}
 	w.SetHeader("Content-Encoding", "gzip")
 	w.SetHeader("Content-Type", "text/css")
-
-	gz, _ := gzip.NewWriter(w)
-	gz.Write([]byte(View.Themes.Current().Style))
+	gz.Write([]byte(t.Style))
 	gz.Close()
 }
